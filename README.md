@@ -26,9 +26,8 @@
 
 ## 服务端启动命令设计
 >### Options:
-*  `-b` [BindIP]:[BindPort]  (defalut:0.0.0.0:8848)
-*  `-camera` [enable|disable]  (defalut:enable)
-*  `-control` [enable|disable]  (defalut:enable)
+*  `-b` \[BindIP\]:\[BindPort\]  \(defalut:0.0.0.0:8848\)
+*  `-camera` \[enable|disable\]  \(defalut:enable\)
 *  `/?`
 *  `-h`
 *  `-help`
