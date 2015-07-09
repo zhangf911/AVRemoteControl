@@ -59,3 +59,6 @@ obj/
 Binaries/
 VS11.winrt/
 !*.vcxproj.*
+*.yuv
+*.mp4
+*.avi
