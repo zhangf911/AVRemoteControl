@@ -24,13 +24,13 @@ int main(int argc, char* argv[])
 	//Set some options  
 	AVDictionary* options = nullptr;
 	//grabbing frame rate  
-	av_dict_set(&options, "framerate", "5", 0);  
-	//The distance from the left edge of the screen or desktop  
-	//av_dict_set(&options,"offset_x","20",0);  
-	//The distance from the top edge of the screen or desktop  
-	//av_dict_set(&options,"offset_y","40",0);  
-	//Video frame size. The default is to capture the full screen  
-	av_dict_set(&options, "video_size", "640x480",0);  
+	av_dict_set(&options, "framerate", "5", 0);
+	//The distance from the left edge of the screen or desktop
+	//av_dict_set(&options,"offset_x","20",0);
+	//The distance from the top edge of the screen or desktop
+	//av_dict_set(&options,"offset_y","40",0);
+	//Video frame size. The default is to capture the full screen
+	av_dict_set(&options, "video_size", "640x480", 0);
 	if (avformat_open_input(&pFormatCtx, "desktop", ifmt, &options) != 0)
 	{
 		printf("Couldn't open input stream.\n");

@@ -5,6 +5,7 @@
 #include <functional>
 #include <thread>
 #include <vector>
+#include <map>
 
 extern "C"
 {
@@ -12,4 +13,14 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavdevice/avdevice.h>
+};
+
+class InputStream;
+
+enum class InputStreamType
+{
+	Desktop,
+	Camera,
+	Video,
+	Network
 };
