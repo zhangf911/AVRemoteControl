@@ -2,14 +2,15 @@
 
 class InputStream
 {
-public:
+public: //function
 	InputStream(InputStreamType aInputStreamType = InputStreamType::Desktop,
 		std::map<std::string, std::string> aParameters = std::map<std::string, std::string>());
 	~InputStream();
 
-	bool operator >> (AVFrame* aFrame);
+	bool operator >> (AVFrame*& aFrame);
+	bool operator >> (std::shared_ptr<AVFrame>& aFrame);
 
-private:
+private: //data
 	InputStreamType  _inputStreamType;
 
 	AVFormatContext* _formatCtx;

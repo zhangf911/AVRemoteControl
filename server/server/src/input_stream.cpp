@@ -99,7 +99,7 @@ InputStream::~InputStream()
 	av_free_packet(&_packet);
 }
 
-bool InputStream::operator >> (AVFrame* aFrame)
+bool InputStream::operator >> (AVFrame*& aFrame)
 {
 	aFrame = nullptr;
 	int theResult = 0, theGot_picture = 0;
@@ -145,4 +145,12 @@ bool InputStream::operator >> (AVFrame* aFrame)
 		return aFrame != nullptr;
 	}
 	return false;
+}
+
+bool InputStream::operator >> (std::shared_ptr<AVFrame>& aFrame)
+{
+	AVFrame* theFrame = nullptr;
+	this->operator >> (theFrame);
+	aFrame = std::shared_ptr<AVFrame>(theFrame, [](AVFrame* p){av_frame_free(&p); });
+	return true;
 }
