@@ -16,8 +16,11 @@ InputStream::InputStream(InputStreamType aInputStreamType, std::map<std::string,
 	, _videoCodecCtx(nullptr)
 	, _audioCodecCtx(nullptr)
 	, _codec(nullptr)
-	, _frame(nullptr)
+	, _videoFrame(nullptr)
+	, _videoFrameYUV(nullptr)
+	, _audioFrame(nullptr)
 	, _swsCtx(nullptr)
+	, _out_buffer_YUV(nullptr)
 	, _videoStreamIndex(-1)
 	, _audioStreamIndex(-1)
 { 
@@ -33,7 +36,7 @@ InputStream::InputStream(InputStreamType aInputStreamType, std::map<std::string,
 		av_find_input_format(gDesktopInputFormatString);
 		if (avformat_open_input(&_formatCtx, "desktop", theInputfmt, &theOptions) != 0)
 		{
-			printf("Couldn't open input stream.\n");
+			std::cout << "Couldn't open input stream." << std::endl;
 			return;
 		}
 	}
@@ -44,7 +47,7 @@ InputStream::InputStream(InputStreamType aInputStreamType, std::map<std::string,
 
 	if (avformat_find_stream_info(_formatCtx, NULL) < 0)
 	{
-		printf("Couldn't find stream information.\n");
+		std::cout << "Couldn't find stream information." << std::endl;
 		return;
 	}
 	for (std::size_t i = 0; i < _formatCtx->nb_streams; i++)
@@ -60,22 +63,28 @@ InputStream::InputStream(InputStreamType aInputStreamType, std::map<std::string,
 	}
 	if (_videoStreamIndex == -1 && _audioStreamIndex == -1)
 	{
-		printf("Didn't find a video stream.\n");
+		std::cout << "Didn't find a video stream." << std::endl;
 		return;
 	}
 	_videoCodecCtx = _formatCtx->streams[_videoStreamIndex]->codec;
 	_codec = avcodec_find_decoder(_videoCodecCtx->codec_id);
 	if (_codec == nullptr)
 	{
-		printf("Codec not found.\n");
+		std::cout << "Codec not found." << std::endl;
 		return;
 	}
 	if (avcodec_open2(_videoCodecCtx, _codec, NULL) < 0)
 	{
-		printf("Could not open codec.\n");
+		std::cout << "Could not open codec." << std::endl;
 		return;
 	}
 	av_init_packet(&_packet);
+	_videoFrame = av_frame_alloc();
+	_out_buffer_YUV = (uint8_t *)av_malloc(avpicture_get_size(PIX_FMT_YUV420P, _videoCodecCtx->width, _videoCodecCtx->height));
+	avpicture_fill((AVPicture *)_videoFrameYUV, _out_buffer_YUV, PIX_FMT_YUV420P, _videoCodecCtx->width, _videoCodecCtx->height);
+	_swsCtx = sws_getContext(_videoCodecCtx->width, _videoCodecCtx->height, _videoCodecCtx->pix_fmt,
+		_videoCodecCtx->width, _videoCodecCtx->height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+
 }
 
 InputStream::~InputStream()
@@ -84,6 +93,56 @@ InputStream::~InputStream()
 	_videoCodecCtx = nullptr;
 	_codec = nullptr;
 	if (_swsCtx != nullptr) sws_freeContext(_swsCtx);
-	if (_frame != nullptr) av_frame_free(&_frame);
+	if (_out_buffer_YUV != nullptr) av_free(_out_buffer_YUV);
+	if (_videoFrame != nullptr) av_frame_free(&_videoFrame);
+	if (_audioFrame != nullptr) av_frame_free(&_audioFrame);
 	av_free_packet(&_packet);
+}
+
+bool InputStream::operator >> (AVFrame* aFrame)
+{
+	aFrame = nullptr;
+	int theResult = 0, theGot_picture = 0;
+	if (av_read_frame(_formatCtx, &_packet) >= 0)
+	{
+		if (_packet.stream_index == _videoStreamIndex)
+		{
+			theResult = avcodec_decode_video2(_videoCodecCtx, _videoFrame, &theGot_picture, &_packet);
+			if (theResult < 0)
+			{
+				std::cout << "Decode Video Packet Error." << std::endl;
+				goto LoopClearup;
+			}
+			if (theGot_picture)
+			{
+				theResult = sws_scale(_swsCtx, (const uint8_t* const*)_videoFrame->data, _videoFrame->linesize, 0,
+					_videoCodecCtx->height, _videoFrameYUV->data, _videoFrameYUV->linesize);
+			}
+			aFrame = _videoFrame;
+		}
+		else if (_packet.stream_index == _videoStreamIndex)
+		{
+			theResult = avcodec_decode_audio4(_audioCodecCtx, _audioFrame, &theGot_picture, &_packet);
+			if (theResult < 0)
+			{
+				std::cout << "Decode Audio Packet Error." << std::endl;
+				goto LoopClearup;
+			}
+			if (theGot_picture)
+			{
+				//todo audio
+			}
+			aFrame = _audioFrame;
+		}
+		else
+		{
+			std::cout << "Not Support Stream." << std::endl;
+			return false;
+		}
+
+	LoopClearup:
+		av_free_packet(&_packet);
+		return aFrame != nullptr;
+	}
+	return false;
 }

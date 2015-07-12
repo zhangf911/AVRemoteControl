@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <chrono>
 #include <functional>
 #include <thread>

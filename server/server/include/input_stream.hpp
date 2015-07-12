@@ -7,6 +7,8 @@ public:
 		std::map<std::string, std::string> aParameters = std::map<std::string, std::string>());
 	~InputStream();
 
+	bool operator >> (AVFrame* aFrame);
+
 private:
 	InputStreamType  _inputStreamType;
 
@@ -14,9 +16,12 @@ private:
 	AVCodecContext*  _videoCodecCtx;
 	AVCodecContext*  _audioCodecCtx;
 	AVCodec*         _codec;
-	AVFrame*         _frame;
+	AVFrame*         _videoFrame;
+	AVFrame*         _videoFrameYUV;
+	AVFrame*         _audioFrame;
 	AVPacket         _packet;
 	SwsContext*      _swsCtx;
+	uint8_t*         _out_buffer_YUV;
 
 	int              _videoStreamIndex;
 	int              _audioStreamIndex;
