@@ -7,7 +7,7 @@ public: //function
 		std::map<std::string, std::string> aParameters = std::map<std::string, std::string>());
 	~InputStream();
 
-	bool operator >> (AVFrame*& aFrame);
+	bool operator >> (AVFrame*& aFrame); //need call av_frame_free() after used
 	bool operator >> (std::shared_ptr<AVFrame>& aFrame);
 
 private: //data
